@@ -37,6 +37,12 @@ once after install so the MCP server connects.
 | `/kola:custom-fields <subcommand>` | Manage the per-install custom-field schema — your own columns on every person row. |
 | `/kola:recent-activity [--days N]` | Cross-channel timeline of who you've interacted with lately, deduped by person and sorted by most-recent-touch. |
 
+## Commands
+
+| Command | What it does |
+|---|---|
+| `/kola:run` | Start Kola.app if its local MCP server isn't already responding on `127.0.0.1:47900`. macOS only. |
+
 ## Agents
 
 | Agent | What it does |
