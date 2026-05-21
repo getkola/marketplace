@@ -7,7 +7,7 @@ for [Kola](https://getkola.app) — the AI-native people-memory layer.
 
 | Plugin | What it adds |
 |---|---|
-| **[kola](./kola)** | Use Kola from Claude Code — meeting prep, network search, contact capture, list management, custom-field schema, and a cross-channel recent-activity view. Talks to the Kola desktop app's local MCP server. |
+| **[kola](./kola)** | Use Kola from Claude Code — meeting prep, network search, contact capture, list management, custom-field schema, a cross-channel recent-activity view, and a `contact-suggester` agent that proactively surfaces people from your network when you discuss real work in chat. Talks to the Kola desktop app's local MCP server. |
 
 ## Install
 

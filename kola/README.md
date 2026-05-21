@@ -37,6 +37,12 @@ once after install so the MCP server connects.
 | `/kola:custom-fields <subcommand>` | Manage the per-install custom-field schema — your own columns on every person row. |
 | `/kola:recent-activity [--days N]` | Cross-channel timeline of who you've interacted with lately, deduped by person and sorted by most-recent-touch. |
 
+## Agents
+
+| Agent | What it does |
+|---|---|
+| **contact-suggester** | Silent by default. Fires at most once per conversation, and only when overwhelming multi-signal evidence (multiple recent matching messages + a structured corroboration, on a *specific* named topic) points at one person in your network. If unsure, says nothing — interrupting you with a weak guess is treated as worse than staying quiet. When it does fire, it appends one line with a real quoted snippet, the channel, and the date. Read-only. Tell it "stop suggesting" to stand down for the session. |
+
 ## How the skills connect
 
 ```
@@ -44,11 +50,17 @@ recent-activity ─┐
 network-search ──┼──► meeting-brief ──► (your meeting)
                  │
 save-contact ────┴──► lists / custom-fields ──► (better future briefs)
+
+(rare, only on overwhelming evidence) ──► contact-suggester ──► one quoted name
 ```
 
 `meeting-brief` is the central read surface. `save-contact`, `lists`,
 and `custom-fields` are the write surfaces — they sharpen what
-`meeting-brief` and `network-search` can recall on the next pass.
+`meeting-brief` and `network-search` can recall on the next pass. The
+`contact-suggester` agent is silent by default. It only emits a single
+one-line suggestion when overwhelming, multi-signal evidence lines up —
+the floor is intentionally high so the agent never disturbs you with a
+weak guess.
 
 ## Underlying tools
 
