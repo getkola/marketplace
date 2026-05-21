@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "kola": {
+      "type": "http",
+      "url": "http://127.0.0.1:47900/mcp",
+      "title": "Kola",
+      "description": "Local Kola desktop app — read and write the people index, emails / Telegram / WhatsApp / LinkedIn message history, lists, custom fields, files, and the semantic search index. Requires Kola.app to be running."
+    }
+  }
+}

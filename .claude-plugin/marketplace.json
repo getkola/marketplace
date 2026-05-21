@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "kola-marketplace",
+  "description": "Plugins for Kola — the AI-native people-memory layer. Drives Kola's local MCP server with workflow skills for meeting prep, network search, contact capture, list management, and custom-field schema design.",
+  "owner": {
+    "name": "Kola"
+  },
+  "plugins": [
+    {
+      "name": "kola",
+      "source": "./kola",
+      "description": "Use Kola from Claude Code — brief yourself before a meeting, search your network by who-knows-what, capture new contacts as you meet them, organize people into lists, and shape your per-install custom-field schema. Talks to the Kola desktop app's local MCP server.",
+      "author": {
+        "name": "Kola"
+      }
+    }
+  ]
+}
