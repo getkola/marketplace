@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "kola-marketplace",
-  "description": "Plugins for Kola — the AI-native people-memory layer. Drives Kola's local MCP server with workflow skills for meeting prep, network search, contact capture, list management, and custom-field schema design.",
+  "description": "Plugins for Kola (getkola.app) — the AI-native people-memory layer. Drives Kola's local MCP server with workflow skills for meeting prep, network search, contact capture, list management, and custom-field schema design.",
   "owner": {
     "name": "Kola"
   },
