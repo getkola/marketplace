@@ -26,20 +26,26 @@ only the two steps below.
 
 ## What to do
 
-1. **Allow all Kola MCP tools.** Ask the user to permanently allow every
-   tool from the Kola MCP server (the `mcp__kola__*` tools) — "always
-   allow", not per-call. Explain why in one line:
+1. **Tell the user to allow all Kola MCP tools — they must do this, you
+   can't.** You cannot grant tool permissions yourself; only the user can,
+   through the client's permission UI. So your job here is to *instruct*,
+   not to authorize. Say, in plain terms:
 
-   > Allow Kola's tools to run without asking each time? The scheduled
-   > data-health sweep runs unattended, so it can't answer permission
-   > prompts — it needs these pre-approved or it will stall.
+   > Before the scheduled sweep can run hands-off, you need to allow Kola's
+   > tools server-wide — it runs unattended and can't answer permission
+   > prompts, so a per-tool approval will stall it on the first new tool.
+   > When a "Claude wants to use … from kola:kola" prompt appears, open the
+   > dropdown next to **"Allow for all scheduled runs"** and choose the
+   > option that allows **all tools from kola:kola** (the whole server),
+   > rather than approving one tool at a time. You can also pre-allow the
+   > Kola server in the client's settings beforehand.
 
-   On yes, grant it the way this client does: add an allow rule for the
-   whole Kola server to settings (e.g. `mcp__kola` in `permissions.allow`),
-   or accept the client's "always allow for this server" affordance. Do
-   not enumerate tools one by one — allow the server as a whole. If the
-   user declines, continue, but warn that the unattended sweep will stall
-   on the first tool call until the tools are allowed.
+   Be explicit that approving a single tool ("Allow for all scheduled
+   runs" without the server-wide option) only covers that one tool — each
+   new tool (archive_company, merge_companies, archive_person, …) will
+   prompt again until the whole server is allowed. If they don't allow
+   server-wide, the unattended sweep will stall mid-run the first time it
+   reaches an un-approved tool.
 
 2. **Ask the data-health cadence** (a single-select):
 
