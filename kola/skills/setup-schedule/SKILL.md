@@ -46,23 +46,28 @@ Two consequences you must honour:
    for an explicit yes. For example:
 
    > "I can set up a recurring Kola data-health sweep that runs **every
-   > hour** — it auto-merges clear duplicate people, archives obvious junk
-   > contacts (no-reply addresses, etc.), and drops anything it's unsure
-   > about into a 'Data health · review' list for you. It only runs while
-   > Kola.app is open on this machine. Want me to schedule it hourly?"
+   > hour** — it enriches companies (descriptions, domains), merges clear
+   > duplicates, archives obvious junk contacts, and acts only when it's
+   > confident. It only runs while Kola.app is open on this machine. Want
+   > me to schedule it hourly?"
 
    Honour an explicit cadence in the user's request (`daily` / `weekly`)
    if they gave one. Don't proceed on silence.
 
-2. **Avoid duplicate schedules.** Before creating, invoke the `schedule`
-   skill to list existing scheduled tasks. If one already runs a Kola
-   maintenance sweep, **update its cadence** instead of adding a second —
-   two overlapping hourly cleaners is a bug, not a feature.
+2. **Find an existing Kola schedule — update, don't duplicate.** The
+   scheduled task has a fixed title: **`Kola data-health sweep`**. Invoke
+   the `schedule` skill to list scheduled tasks and look for that title.
+   If it exists, you are **updating** it, not creating a second one.
 
-3. **Create the schedule.** Invoke the `schedule` skill, asking it to run
-   the routine in *"The scheduled routine"* section below at the agreed
-   cadence (default: every hour). Pass the routine verbatim as the prompt
-   the scheduled run should execute.
+3. **Create or update the schedule** via the `schedule` skill, always
+   under the title `Kola data-health sweep`:
+   - Set the cadence to the agreed value (default hourly).
+   - Set the prompt to the routine in *"The scheduled routine"* below,
+     **verbatim and in full** — even when updating an existing schedule.
+     The cron stores a *snapshot* of the routine text, so refreshing the
+     prompt is the only way a plugin update to the routine reaches an
+     already-scheduled task. (Updating just the cadence would leave the
+     old logic running.)
 
 4. **Confirm back.** Report the cadence, the next run time, and how to
    change or stop it ("say 'reschedule Kola to daily' or 'stop the Kola
@@ -75,8 +80,10 @@ Hand this to the `schedule` skill as the prompt to run on the cadence:
 
 ```
 Kola data-health sweep. Work through the Kola MCP tools. This run is
-UNATTENDED — there is no human to confirm — so apply only what the backend
-marks safe, and queue or draft everything else.
+UNATTENDED and NOBODY reviews it afterwards — so there is no point drafting
+notes or queueing rows for later. The rule is binary: when you are
+confident, apply the real change; when you are not, skip it. Nothing in
+between.
 
 0. Get the worklist. Call `get_data_health`. If it errors or Kola is
    unreachable, STOP immediately and output nothing — the app is closed;
@@ -94,30 +101,43 @@ marks safe, and queue or draft everything else.
    calls for it (a real company description; whether two company names are
    the same legal entity).
 
-2. Decide for yourself, then act by how CERTAIN you are:
-   - CERTAIN it's the same identity (two rows with an identical email,
-     linkedin_url, or telegram id; or clearly the same legal entity after
+2. Decide, then APPLY the real change when confident. Apply it for real —
+   no "DRAFT" notes, no review lists. Reversible fields (description,
+   name, domain, archive) you can change on solid evidence; the one lossy
+   op (merge) needs near-certainty.
+   - Missing/weak description, and you've confirmed what the company is
+     (its own site or a reliable source) -> set the real `description`
+     via update_company. Write the description field itself — NOT notes,
+     and no "DRAFT" prefix.
+   - Missing domain, and you've confirmed the canonical domain ->
+     add_company_domain, then update_company(primary_domain_id=…) to make
+     it primary.
+   - Primary domain is a subdomain (e.g. mail.anthropic.com) while the
+     canonical apex (anthropic.com) is already one of the company's
+     domains -> set the apex as primary via update_company. Fix this
+     confidently — it's exactly the Anthropic case.
+   - Name is clearly wrong/abbreviated and you know the canonical name ->
+     update_company(name=…).
+   - Two rows are unambiguously the same identity (identical email /
+     linkedin_url / telegram id, or clearly the same legal entity after
      research) -> merge_people / merge_companies.
-   - CERTAIN it's not a real person (no-reply / automated address, zero
-     signal across every channel, no list membership, empty notes) ->
-     archive_person. Never delete.
-   - NOT certain (similar-but-not-identical, "probably the same", a
-     plausible-looking duplicate): this run is unattended, so do NOT act.
-     Add the subjects to a list named "Data health · review" (create_list
-     if missing, then add_to_list) for the user to decide.
-   - Missing company description: research it, then write your draft into
-     the company NOTES via update_company prefixed "DRAFT (review): ".
-     Do NOT overwrite the description field unattended.
-   - False positive on inspection (it's fine): do nothing.
+   - The "company" is not a real organisation — a placeholder bucket
+     ("Self-employed", "Freelance", "Stealth", "NDA", and their
+     translations like "Фриланс" / "Предприниматель") or a bad-data
+     parsing artifact (e.g. a "Com" row with unrelated *.com.xx domains)
+     -> archive_company. Reversible, and it stops the row recurring every
+     run.
+   - A contact that is clearly not a real person (no-reply / automated
+     address, zero signal) -> archive_person.
 
-   **When you cannot judge, skip.** If you can't fetch the data you need
-   (a lookup fails), web search is inconclusive, or the evidence simply
-   isn't enough to be sure — do NOT guess. Leave it untouched (or queue it
-   to the review list) and log it as skipped. Inaction is always the safe
-   default; a wrong merge is far more expensive than a missed one.
+   **When you cannot confirm, skip — full stop.** If web search is
+   inconclusive, the evidence is thin, or you'd be guessing, leave the row
+   untouched and log it as skipped. Do NOT draft a note and do NOT queue
+   it anywhere — an unreviewed draft is just clutter. Confidence is the
+   only bar: act on it, or skip.
 
-3. Never hard-delete. Merges/archives only per step 2; notes and
-   descriptions are reversible via update_company.
+3. Never hard-delete. Archive (reversible) is the strongest removal;
+   description / name / domain edits are all reversible in the app.
 
 4. End with a RUN REPORT. This is the message someone sees when they open
    this run in the task's history, so make **planned-vs-changed** obvious.
@@ -129,12 +149,13 @@ marks safe, and queue or draft everything else.
 
        | Check | Looked at | Planned change | Result |
        |-------|-----------|----------------|--------|
-       | company-enrich-7 | Stripe — no domain/description | add domain stripe.com, set description | applied domain; description drafted to notes |
-       | people-dup-12-34 | Ada L. / A. Lovelace @ Acme | merge 34 -> 12 | queued for review (not certain) |
+       | company-enrich-7 | Stripe — no domain/description | add domain + set description | applied: domain stripe.com (primary) + description |
+       | company-enrich-1888 | Anthropic — primary was mail.anthropic.com | set apex primary | applied: primary -> anthropic.com |
+       | company-enrich-31 | "NDA" — placeholder, 38 people, no domain | archive (not a company) | archived |
        | people-noreply-99 | noreply@news.x, 0 signal | archive | archived |
        | company-enrich-5 | Foo Ltd — no domain | find domain | skipped (could not confirm) |
 
-       Summary: A applied, B drafted, C queued, D skipped of N checks.
+       Summary: A applied, B archived, C skipped of N checks.
 
    For a merge, record the dropped row's name + emails in the "Looked at"
    cell BEFORE merging, so a bad merge can be traced. If the worklist came
@@ -163,5 +184,7 @@ marks safe, and queue or draft everything else.
   scheduler runs detached from this machine — there is no remote Kola
   endpoint. For always-on cleanup independent of Claude, use Kola's
   in-app Agents (Settings → Agents) instead.
-- It never hard-deletes people. Uncertain rows are queued, obvious junk is
-  archived, only exact-identity duplicates are merged.
+- It never hard-deletes. It applies confident changes directly (description,
+  domain, name, archive, exact-identity merge) and skips anything it can't
+  confirm — it does not draft notes or queue rows for a review that never
+  happens.
