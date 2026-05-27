@@ -95,6 +95,15 @@ between.
    decided anything — there is no severity, no confidence, no suggested
    fix. That judgment is yours.
 
+   The worklist is prioritised and self-advancing, and ONE tick does ONE
+   kind of work: the batch you get back is either all `company-enrich-<id>`
+   (companies missing a domain/description) OR all `people-archive-<id>`
+   (contacts surfaced for archive review) — the two kinds alternate from
+   tick to tick, so don't expect both in the same run. Just work the batch
+   you got; the next tick does the other kind and picks up where it left
+   off. The people batch is ordered worst-first: role/automated junk
+   addresses, then contacts with no engagement at all, then active contacts.
+
 1. Investigate each check before doing anything. Pull the actual data for
    its subjects — get_person, get_person_emails, get_company, or the
    company's people. Use web search for external facts when the reason
@@ -127,8 +136,18 @@ between.
      parsing artifact (e.g. a "Com" row with unrelated *.com.xx domains)
      -> archive_company. Reversible, and it stops the row recurring every
      run.
-   - A contact that is clearly not a real person (no-reply / automated
-     address, zero signal) -> archive_person.
+   - A `people-archive-<id>` check is a contact surfaced for archive review.
+     Pull get_person + get_person_emails and decide:
+     - Clearly not a real, reachable person — a no-reply / automated /
+       role address (noreply@, notifications@, a bounce token), or a
+       junk/dead row with zero signal -> archive_person.
+     - A real person you simply have no recent activity with -> KEEP
+       (skip). "No engagement" is not a reason to archive someone real;
+       only genuine non-people and junk get archived. A role address you
+       actually correspond with (a `support@` with a real thread) is NOT
+       junk -> keep.
+     When in doubt, keep. Archive is reversible, but needlessly archiving a
+     real contact is exactly the kind of churn an unattended run must avoid.
 
    **When you cannot confirm, skip — full stop.** If web search is
    inconclusive, the evidence is thin, or you'd be guessing, leave the row
@@ -143,7 +162,10 @@ between.
    this run in the task's history, so make **planned-vs-changed** obvious.
    As you work through step 2, track for every check: what you looked at,
    what you *intended* to change, and what you *actually* did. Then output
-   one table — planned change in one column, result in the next:
+   one table — planned change in one column, result in the next. A run's
+   checks are all one kind; below are the two shapes a report can take.
+
+   A company-enrich tick:
 
        Kola data-health run — <ISO date & time>
 
@@ -152,8 +174,14 @@ between.
        | company-enrich-7 | Stripe — no domain/description | add domain + set description | applied: domain stripe.com (primary) + description |
        | company-enrich-1888 | Anthropic — primary was mail.anthropic.com | set apex primary | applied: primary -> anthropic.com |
        | company-enrich-31 | "NDA" — placeholder, 38 people, no domain | archive (not a company) | archived |
-       | people-noreply-99 | noreply@news.x, 0 signal | archive | archived |
        | company-enrich-5 | Foo Ltd — no domain | find domain | skipped (could not confirm) |
+
+   A people-archive tick:
+
+       | Check | Looked at | Planned change | Result |
+       |-------|-----------|----------------|--------|
+       | people-archive-99 | noreply@news.x, 0 signal | archive | archived |
+       | people-archive-204 | real contact, no recent activity | keep | skipped (real person) |
 
        Summary: A applied, B archived, C skipped of N checks.
 
