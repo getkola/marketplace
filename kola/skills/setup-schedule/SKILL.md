@@ -62,6 +62,15 @@ Two consequences you must honour:
 3. **Create or update the schedule** via the `schedule` skill, always
    under the title `Kola data-health sweep`:
    - Set the cadence to the agreed value (default hourly).
+   - **Use the cheapest capable model.** This sweep is mechanical work —
+     read a row, check a fact, apply a reversible edit or skip — not deep
+     reasoning, so it does not need a frontier model and running it on one
+     every tick is the main cost. When the scheduler exposes a model
+     setting, pick the cheapest model that can still follow the routine:
+     **prefer Haiku; fall back to Sonnet** if Haiku isn't selectable.
+     Never schedule this on Opus. If the scheduler offers no model knob,
+     say so in the confirm-back so the user can set it themselves — don't
+     silently let it inherit an expensive default.
    - Set the prompt to the routine in *"The scheduled routine"* below,
      **verbatim and in full** — even when updating an existing schedule.
      The cron stores a *snapshot* of the routine text, so refreshing the
@@ -69,10 +78,11 @@ Two consequences you must honour:
      already-scheduled task. (Updating just the cadence would leave the
      old logic running.)
 
-4. **Confirm back.** Report the cadence, the next run time, and how to
-   change or stop it ("say 'reschedule Kola to daily' or 'stop the Kola
-   schedule'"). Remind them once: it only does anything while Kola.app is
-   running.
+4. **Confirm back.** Report the cadence, the model the run uses (or that
+   the user must pick a cheap one manually if the scheduler has no model
+   setting), the next run time, and how to change or stop it ("say
+   'reschedule Kola to daily' or 'stop the Kola schedule'"). Remind them
+   once: it only does anything while Kola.app is running.
 
 ## The scheduled routine (what runs each tick)
 
@@ -105,10 +115,19 @@ between.
    addresses, then contacts with no engagement at all, then active contacts.
 
 1. Investigate each check before doing anything. Pull the actual data for
-   its subjects — get_person, get_person_emails, get_company, or the
-   company's people. Use web search for external facts when the reason
-   calls for it (a real company description; whether two company names are
-   the same legal entity).
+   its subjects FIRST — get_person, get_person_emails, get_company, or the
+   company's people. Decide from that internal data whenever you can.
+
+   Web search is the most expensive thing you do here, so ration it
+   HARD. Search only when an external fact is genuinely required (a real
+   company description; whether two company names are the same legal
+   entity) AND the internal data can't settle it. When you do search:
+   **at most 2 web operations per check** — prefer a single fetch of the
+   company's own site (its domain), and at most one fallback search. If
+   it's still unconfirmed after that, STOP and skip the row; do not keep
+   searching. Never run a multi-query research loop on one company — one
+   skipped row is cheaper than ten searches, and it'll resurface next
+   tick anyway.
 
 2. Decide, then APPLY the real change when confident. Apply it for real —
    no "DRAFT" notes, no review lists. Reversible fields (description,
