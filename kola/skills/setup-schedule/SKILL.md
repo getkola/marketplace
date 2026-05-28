@@ -190,10 +190,8 @@ between.
    back empty, the report is one line:
    "Kola data-health run <datetime> — nothing to check."
 
-5. Append the exact same report to `~/.kola/data-health-log.md` (create the
-   folder/file if missing), under its timestamped heading — a durable
-   cross-run ledger on top of this run's transcript. Always append, even
-   on a no-op run.
+   Do NOT write the report (or anything else) to disk — the run's
+   transcript in the task history is the durable record. No log file.
 ```
 
 ## What this skill does
