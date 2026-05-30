@@ -4,10 +4,15 @@ description: >
   Find people in the user's network by who-they-are or what-they-know.
   Combines Kola's name resolver, structured filters (company / role /
   location / list / custom field), substring search, and TWO kinds of
-  semantic search — over person PROFILES and over MESSAGE history. Use when
-  the user asks "who do I know who…", "find <name>", "find someone at X",
-  "anyone in my network in <place>", "who's worked on Z", "who has
-  experience with W", or "introduce me to <kind of person>".
+  semantic search — over person PROFILES and over MESSAGE history. The
+  user's network is multilingual; trigger on Russian as readily as English.
+  Use when the user asks "who do I know who…" / "кто из моих контактов…",
+  "find <name>" / "найди <имя>", "find someone at X" / "найди кого-то из X",
+  "anyone in my network in <place>" / "кто у меня есть в <место>",
+  "who's worked on Z" / "кто работал над Z", "who has experience with W" /
+  "у кого есть опыт в W", or "introduce me to <kind of person>" /
+  "познакомь меня с <тип человека>". Includes asks like "find Misha from
+  Portugal in Kola" / "найди мишу из португалии в Kola".
 argument-hint: '<natural-language query> [--limit N]'
 ---
 
