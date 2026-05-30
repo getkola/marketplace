@@ -4,8 +4,11 @@ description: >
   Capture or update a person in Kola — from a name, business card paste,
   email signature, LinkedIn URL, or freeform "I just met X at Y, they do Z."
   Dedupes against existing rows before creating, and updates them when the
-  user means update. Use when the user says "save this contact", "add X to
-  Kola", "I just met …", "remember this person", or pastes contact details.
+  user means update. The user is multilingual; trigger on Russian as
+  readily as English. Use when the user says "save this contact" /
+  "сохрани контакт", "add X to Kola" / "добавь X в Kola", "I just met …" /
+  "я только что познакомился с …", "remember this person" / "запомни этого
+  человека", or pastes contact details.
 argument-hint: '<freeform contact details, paste, or "update <person> <field>=<value>">'
 ---
 

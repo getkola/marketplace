@@ -4,9 +4,12 @@ description: >
   Manage Kola's per-install custom-field schema — the user-defined
   extension columns on every person. Add a new field (text / number /
   boolean / datetime / file), rename or describe an existing one,
-  re-order, or delete one. Use when the user says "add a custom field
-  for X", "track Y on every person", "change the label for Z field",
-  "what custom fields do I have", or "drop the W field".
+  re-order, or delete one. The user is multilingual; trigger on Russian as
+  readily as English. Use when the user says "add a custom field for X" /
+  "добавь кастомное поле для X", "track Y on every person" / "храни Y у
+  каждого человека", "change the label for Z field" / "переименуй поле Z",
+  "what custom fields do I have" / "какие у меня кастомные поля", or
+  "drop the W field" / "удали поле W".
 argument-hint: '<add|edit|list|delete> [args]'
 ---
 

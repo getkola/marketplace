@@ -2,10 +2,13 @@
 name: meeting-brief
 description: >
   Brief the user on a person before a meeting — pulls everything Kola knows
-  about them and renders a one-page prep memo. Use when the user says
-  "I have a call with X tomorrow", "prep me for the meeting with Y",
-  "what do I know about Z", "remind me who X is", or "background on
-  <person>".
+  about them and renders a one-page prep memo. The user is multilingual;
+  trigger on Russian as readily as English. Use when the user says
+  "I have a call with X tomorrow" / "у меня завтра созвон с X",
+  "prep me for the meeting with Y" / "подготовь меня к встрече с Y",
+  "what do I know about Z" / "что я знаю о Z",
+  "remind me who X is" / "напомни, кто такой X", or "background on
+  <person>" / "расскажи про <человека>".
 argument-hint: '<name | email | linkedin url | telegram handle> [--depth full|fast]'
 ---
 

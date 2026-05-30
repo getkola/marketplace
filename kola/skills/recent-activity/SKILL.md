@@ -2,10 +2,13 @@
 name: recent-activity
 description: >
   Show who the user has been talking to lately across every channel
-  Kola tracks (Gmail, Telegram, WhatsApp, LinkedIn, calendar). Use when
-  the user says "who did I talk to this week", "who has been in touch
-  lately", "show recent activity", "what did I miss", or "who's
-  reached out recently".
+  Kola tracks (Gmail, Telegram, WhatsApp, LinkedIn, calendar). The user is
+  multilingual; trigger on Russian as readily as English. Use when the user
+  says "who did I talk to this week" / "с кем я общался на этой неделе",
+  "who has been in touch lately" / "кто выходил на связь в последнее время",
+  "show recent activity" / "покажи недавнюю активность", "what did I miss" /
+  "что я пропустил", or "who's reached out recently" / "кто недавно
+  писал".
 argument-hint: '[--days N] [--channel gmail|telegram|whatsapp|linkedin|calendar] [--limit N]'
 ---
 

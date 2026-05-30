@@ -2,10 +2,13 @@
 name: lists
 description: >
   Manage Kola lists — create a new list, rename one, delete one, add or
-  remove people, and show what's on a list. Use when the user says
-  "create a list called X", "add Y to my Z list", "remove Y from Z",
-  "rename Z to W", "show my Investors list", "what lists do I have", or
-  "list everyone in <list>".
+  remove people, and show what's on a list. The user is multilingual;
+  trigger on Russian as readily as English. Use when the user says
+  "create a list called X" / "создай список X", "add Y to my Z list" /
+  "добавь Y в список Z", "remove Y from Z" / "убери Y из Z",
+  "rename Z to W" / "переименуй Z в W", "show my Investors list" /
+  "покажи список инвесторов", "what lists do I have" / "какие у меня
+  списки", or "list everyone in <list>" / "покажи всех из <списка>".
 argument-hint: '<create|add|remove|show|rename|delete|ls> [args]'
 ---
 
