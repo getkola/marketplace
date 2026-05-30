@@ -28,10 +28,16 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    - `get_person_whatsapp_messages` — recent WhatsApp (cap to last 10).
    - `get_person_linkedin_messages` — recent LinkedIn DMs (cap to last 10).
    - `list_custom_fields` — for any per-install fields set on this person, format the values via the person's `custom_fields` object.
+   - `semantic_search_notes` — query by the person's name (and company) to surface notes you've jotted that mention them. Dedupe against `people.notes`, which you already have.
+   - `semantic_search_recordings` — query by the person's name (and company) to surface call transcripts where they came up; fetch the full text with `get_recording_transcript` only for the closest hit.
 
-   If `--depth fast`, skip the message-history fetches and use only the
-   counts already on `get_person` (`email_count`, `telegram_dm_count`,
-   `whatsapp_dm_count`, `calendar_event_count`).
+   Notes and recordings aren't person-scoped, so a hit is a *candidate* —
+   keep only snippets that plainly reference this person, and drop the rest.
+
+   If `--depth fast`, skip the message-history fetches and the
+   notes/recordings semantic searches, and use only the counts already on
+   `get_person` (`email_count`, `telegram_dm_count`, `whatsapp_dm_count`,
+   `calendar_event_count`).
 
 3. **Render the memo** in this exact order — headers omitted when their section is empty:
 
@@ -59,6 +65,10 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
 
    ## Notes
    <freeform notes from people.notes, verbatim>
+
+   ## Mentioned in (notes & calls)
+   [note · <date>] <title> — <one-line gist>
+   [call · <date>] <recording title> — <one-line gist of the relevant moment>
    ```
 
 4. **Closing line — what to ask about.** From the recent thread summaries,

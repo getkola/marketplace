@@ -76,12 +76,16 @@ The plugin talks to the local Kola MCP server, which exposes:
 
 - People — `list_people`, `search_people`, `query_people` (read-only
   SQL over `v_people_full` / `v_lists` / `v_custom_field_defs`),
-  `semantic_search_messages`, `describe_people_schema`, `get_person`,
+  `describe_people_schema`, `get_person`,
   `create_person`, `update_person`, `archive_person`, `unarchive_person`,
   `merge_people`, `list_archived`.
 - Per-channel history — `get_person_emails`,
   `get_person_telegram_messages`, `get_person_whatsapp_messages`,
   `get_person_linkedin_messages`.
+- Semantic recall — `semantic_search_messages` (message bodies across
+  Gmail / Telegram / WhatsApp / LinkedIn / calendar),
+  `semantic_search_people` (profiles), `semantic_search_companies`,
+  `semantic_search_notes`, `semantic_search_recordings`.
 - Lists — `list_lists`, `create_list`, `get_list`, `rename_list`,
   `delete_list`, `add_to_list`, `remove_from_list`.
 - Custom fields — `list_custom_fields`, `create_custom_field`,

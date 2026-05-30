@@ -14,7 +14,7 @@ argument-hint: '<natural-language query> [--limit N]'
 # /kola:network-search
 
 The single most common failure is **picking the wrong search tool**. Kola
-has five distinct corpora; "find a person" and "find what was discussed"
+has several distinct corpora; "find a person" and "find what was discussed"
 are different searches. Route first, then run — and when in doubt, run
 several tools in ONE batch and merge by `id`. Recall beats precision here:
 a missed contact is worse than an extra candidate.
@@ -27,13 +27,19 @@ a missed contact is worse than an extra candidate.
 | `search_people` | literal substring over name, email, phone, company, position, **location/city/country, telegram bio, and notes** | exact tokens: a handle, a domain, a city string, "PT", "+351" |
 | `semantic_search_people` | embedded PROFILE = display_name + position + company + **notes** + text custom fields | "who is X" by meaning — role, employer, bio, anything a person *is* |
 | `semantic_search_messages` | embedded MESSAGE BODIES (Gmail/Telegram/WhatsApp/LinkedIn/Calendar) | "what was discussed" — topics, expertise demonstrated in conversation |
+| `semantic_search_notes` | embedded NOTE text (your jottings + AI call notes) | "what was discussed" in your own notes — recall a person from something you wrote about a topic |
+| `semantic_search_recordings` | embedded CALL TRANSCRIPTS | "what was discussed" on recorded calls — recall a person from what was actually said on a call |
 | `query_people` → `v_people_full` | structured columns incl. `location/city/state/country`, `notes`, `company`, counts, lists, `cf_<key>` | precise filters: "founders in PT", "everyone in my Investors list" |
 
 **"кто это / who is this" → the first four. "о чём говорили / what was
-discussed" → `semantic_search_messages`.** `semantic_search_messages` does
-NOT see profiles or notes — never use it alone to find a person by
-location, role, or bio. That single mistake makes well-populated contacts
-look missing.
+discussed" → `semantic_search_messages`, and for topics that live in your
+own notes or recorded calls, `semantic_search_notes` /
+`semantic_search_recordings`.** None of these three see profiles — never
+use them alone to find a person by location, role, or bio. That single
+mistake makes well-populated contacts look missing. Note + recording hits
+are also NOT person-scoped (they return `note_id` / `recording_id`, not a
+`person_id`), so read the snippet to identify who it points at, then
+confirm with `search_people` / `resolve_person`.
 
 ## Instructions
 
@@ -44,8 +50,8 @@ look missing.
    |---|---|---|
    | Named person | "find Misha from Lisbon", "where's Anna Petrova" | `resolve_person` (with name + any company/place as `position`/`company` hint) **and** `search_people` |
    | Who-they-are | "founders in Portugal", "designers I know", "anyone in fintech" | `query_people` (structured) **and** `semantic_search_people` **and** `search_people` |
-   | What-was-discussed | "who's worked on rust compilers", "who pitched me on AI safety" | `semantic_search_messages` |
-   | Hybrid | "founders in PT who talked about fundraising" | structured/profile set first, then `semantic_search_messages`, intersect by `id` |
+   | What-was-discussed | "who's worked on rust compilers", "who pitched me on AI safety" | `semantic_search_messages`; add `semantic_search_notes` / `semantic_search_recordings` when the topic may live in your notes or on a recorded call |
+   | Hybrid | "founders in PT who talked about fundraising" | structured/profile set first, then `semantic_search_messages` (+ notes/recordings), intersect by `id` |
 
 2. **Fan out across forms — Kola is multilingual and multi-source.** Names
    and places are stored inconsistently. Issue parallel calls in ONE tool
@@ -79,8 +85,14 @@ look missing.
      variant, the city, the ISO code, the phone prefix).
    - **Message semantic** (`semantic_search_messages`): only for
      what-was-discussed. Default `limit` 20; cap at `--limit N`.
+   - **Notes / recordings semantic** (`semantic_search_notes`,
+     `semantic_search_recordings`): for what-was-discussed topics that may
+     live in your own notes or on recorded calls. Hits carry no
+     `person_id` — read each snippet to identify the person, then resolve
+     them with `search_people` / `resolve_person` before merging.
    - **Hybrid**: structured/profile set first, take the `person_id`s, run
-     `semantic_search_messages`, intersect in-process.
+     `semantic_search_messages` (+ notes/recordings as needed), intersect
+     in-process.
 
 5. **Rank and dedupe.** Merge every tool's hits by `id`. A contact that
    surfaces from more than one tool ranks higher. For message hits keep the
