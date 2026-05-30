@@ -1,6 +1,6 @@
 {
   "name": "kola",
-  "version": "1.1.12",
+  "version": "1.1.13",
   "description": "Use Kola from Claude Code — brief yourself before a meeting, search your network by who-knows-what, capture new contacts as you meet them, organize people into lists, and shape your per-install custom-field schema. Talks to the Kola desktop app's local MCP server.",
   "author": {
     "name": "Kola"
