@@ -11,7 +11,7 @@ description: >
   never on small talk, vague musings, status questions, or coding
   tasks. The default action of this agent is to produce no output.
 model: sonnet
-tools: ["mcp__kola__semantic_search", "mcp__kola__query_people", "mcp__kola__describe_people_schema", "mcp__kola__get_person"]
+tools: ["mcp__kola__semantic_search_messages", "mcp__kola__query_people", "mcp__kola__describe_people_schema", "mcp__kola__get_person"]
 ---
 
 # Contact Suggester
@@ -92,7 +92,7 @@ Output nothing.
 
 Run both in parallel:
 
-- **`semantic_search`** with the topic phrase, `limit: 20`.
+- **`semantic_search_messages`** with the topic phrase, `limit: 20`.
 - **`query_people`** against `v_people_full` when the topic implies
   a structured filter (e.g. "people whose company is Stripe" → exact
   match on `company`; "head of growth" → LIKE on `position`). Call

@@ -76,7 +76,7 @@ The plugin talks to the local Kola MCP server, which exposes:
 
 - People — `list_people`, `search_people`, `query_people` (read-only
   SQL over `v_people_full` / `v_lists` / `v_custom_field_defs`),
-  `semantic_search`, `describe_people_schema`, `get_person`,
+  `semantic_search_messages`, `describe_people_schema`, `get_person`,
   `create_person`, `update_person`, `archive_person`, `unarchive_person`,
   `merge_people`, `list_archived`.
 - Per-channel history — `get_person_emails`,
