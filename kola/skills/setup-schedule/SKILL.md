@@ -173,9 +173,30 @@ between.
      When in doubt, keep. Archive is reversible, but needlessly archiving a
      real contact is exactly the kind of churn an unattended run must avoid.
    - A `people-enrich-<id>` check is an active contact surfaced for a profile
-     review — the backend has NOT said anything is missing. Pull get_person +
-     get_person_emails, then fill any field you can **confirm** and that isn't
-     already correct, via update_person:
+     review — the backend has NOT said anything is missing. The goal is to
+     fill **every** field you can confirm, not just a known few — so work the
+     whole row, not a shortlist.
+
+     First, gather ALL the evidence already on the contact and the full set of
+     fillable fields:
+     - Call get_person + get_person_emails, and mine EVERYTHING they return —
+       not just the email. The Telegram bio, notes, and any existing field are
+       all evidence (e.g. a bio "SF <> London. Ex-WP Engine. B2B GTM lead"
+       gives you location = "London" or "SF / London", a past employer, and a
+       role). Email signatures and thread context count too. Do not ignore a
+       field source just because it isn't an email signature.
+     - Learn the actual schema so you know what CAN be filled: check the
+       people schema (describe / update_person params) and call
+       list_custom_fields. Then fill any of these that you can confirm and that
+       isn't already correct: display name + first/last name, company,
+       position/role, location, phone, linkedin_url, telegram_handle,
+       whatsapp_phone, birthday, and any custom field — plus notes for
+       confirmed context that has no structured slot. Route structured fields
+       through update_person; route custom fields through
+       set_custom_field_value (one call per key). Do NOT invent a custom-field
+       def that doesn't exist — only set ones already in the schema.
+
+     Then apply, field by field, everything you can defend:
      - name — if the contact has no real name and is displayed as a raw email
        address (the card shows e.g. "jane@example.com"), derive the name from
        the email local-part and write it so the DISPLAYED name actually
@@ -195,14 +216,29 @@ between.
        domain or a confirmed employer. Do NOT invent a company from a domain
        that reads like a personal name unless Kola or a reliable source
        confirms it's an org.
-     - position / role, location — from an email signature or thread context.
-     - phone — e.g. a number already sitting in their notes or a signature;
-       copy it into the phone field. Don't invent a number.
+       When setting the company creates a NEW company row (or matches one that
+       has no domain) and you have a confirmed domain for it — e.g. the bio
+       links the product site (a bio that points at a product domain as the
+       person's own product confirms both the company name and that domain) —
+       don't leave that company domain-less. After update_person, fill the
+       company too: add_company_domain, then update_company(primary_domain_id=…)
+       to make it primary. Setting a person's company and leaving the company
+       record blank is a half-done enrich.
+     - location, position / role — from the Telegram bio, an email signature,
+       or thread context. A bio line like "SF <> London" is a confirmable
+       location; write it. Don't leave a clean location/role unset just
+       because it came from the bio rather than a signature.
+     - phone, linkedin_url, telegram_handle, whatsapp_phone, birthday — copy
+       in any value sitting in the bio, notes, or a signature. Don't invent
+       one; if it's there and confirmable, fill it.
+     Do not stop after the first field you fill — a contact can need several
+     edits in one pass (e.g. company AND location AND role from a single bio).
+     Walk every field above and apply each one you can confirm.
      Ration web search the same way (≤2 ops, prefer the company's own site).
      update_person edits are reversible, so solid evidence is enough — you do
-     not need merge-level certainty. If there's nothing you can confidently
-     add or correct, KEEP (skip) — an enrich check with no real improvement is
-     a no-op, never a guess.
+     not need merge-level certainty. If there's genuinely nothing you can
+     confidently add or correct on ANY field, KEEP (skip) — an enrich check
+     with no real improvement is a no-op, never a guess.
 
    **When you cannot confirm, skip — full stop.** If web search is
    inconclusive, the evidence is thin, or you'd be guessing, leave the row
@@ -244,9 +280,10 @@ between.
 
        | Check | Looked at | Planned change | Result |
        |-------|-----------|----------------|--------|
-       | people-enrich-42 | Ada L. — no company; emails @analyticalengine.com | set company | applied: company = Analytical Engine |
-       | people-enrich-88 | shown as "jane@example.com"; another Kola contact on example.com has company set | set name + reuse company | applied: name = Jane, company = <from Kola> |
-       | people-enrich-77 | Bob R. — full profile already | none | skipped (nothing to add) |
+       | people-enrich-42 | Ada L. — bio "SF <> London", emails @analyticalengine.com | set company + location | applied: company = Analytical Engine, location = SF / London |
+       | people-enrich-88 | Carl G. — bio links carltools.example as own product, no company | set company + its domain | applied: company = Carl Tools + domain carltools.example (primary) |
+       | people-enrich-77 | shown as "jane@example.com"; another Kola contact on example.com has company set | set name + reuse company | applied: name = Jane, company = <from Kola> |
+       | people-enrich-31 | Bob R. — full profile already | none | skipped (nothing to add) |
 
        Summary: A enriched, B skipped of N checks.
 
