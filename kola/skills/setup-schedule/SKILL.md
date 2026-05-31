@@ -59,6 +59,11 @@ Two consequences you must honour:
    scheduled task has a fixed title: **`Kola data-health sweep`**. Invoke
    the `schedule` skill to list scheduled tasks and look for that title.
    If it exists, you are **updating** it, not creating a second one.
+   Read its stored prompt and note the `routine vX` stamp on the first
+   line. Compare it to the current routine version (see step 3): if the
+   live stamp is older, the schedule is stale and this refresh is what
+   updates it; if it already matches, only the cadence/model may need a
+   change. Mention the old→new version in the confirm-back.
 
 3. **Create or update the schedule** via the `schedule` skill, always
    under the title `Kola data-health sweep`:
@@ -78,19 +83,30 @@ Two consequences you must honour:
      prompt is the only way a plugin update to the routine reaches an
      already-scheduled task. (Updating just the cadence would leave the
      old logic running.)
+   - **Keep the version stamp honest.** The routine carries a
+     `routine vX` stamp on its first line and in the run-report header —
+     it is what makes a live schedule self-describing (you can open a run
+     and see which routine version produced it). This stamp must equal
+     this skill's own version (the `version` in plugin.json — currently
+     `1.1.19`). If the literal below has drifted from the skill version,
+     update the stamp to the current version as you install, so the cron
+     snapshot records the version it actually ran.
 
 4. **Confirm back.** Report the cadence, the model the run uses (or that
    the user must pick a cheap one manually if the scheduler has no model
-   setting), the next run time, and how to change or stop it ("say
-   'reschedule Kola to daily' or 'stop the Kola schedule'"). Remind them
-   once: it only does anything while Kola.app is running.
+   setting), the **routine version installed** (`routine v1.1.19`, and the
+   old→new version when you refreshed a stale schedule), the next run time,
+   and how to change or stop it ("say 'reschedule Kola to daily' or 'stop
+   the Kola schedule'"). Remind them once: it only does anything while
+   Kola.app is running.
 
 ## The scheduled routine (what runs each tick)
 
 Hand this to the `schedule` skill as the prompt to run on the cadence:
 
 ```
-Kola data-health sweep. Work through the Kola MCP tools. This run is
+Kola data-health sweep (routine v1.1.19). Work through the Kola MCP tools.
+This run is
 UNATTENDED and NOBODY reviews it afterwards — so there is no point drafting
 notes or queueing rows for later. The rule is binary: when you are
 confident, apply the real change; when you are not, skip it. Nothing in
@@ -258,7 +274,7 @@ between.
 
    A company-enrich tick:
 
-       Kola data-health run — <ISO date & time>
+       Kola data-health run — <ISO date & time> — routine v1.1.19
 
        | Check | Looked at | Planned change | Result |
        |-------|-----------|----------------|--------|
@@ -290,7 +306,7 @@ between.
    For a merge, record the dropped row's name + emails in the "Looked at"
    cell BEFORE merging, so a bad merge can be traced. If the worklist came
    back empty, the report is one line:
-   "Kola data-health run <datetime> — nothing to check."
+   "Kola data-health run <datetime> (routine v1.1.19) — nothing to check."
 
    Do NOT write the report (or anything else) to disk — the run's
    transcript in the task history is the durable record. No log file.
