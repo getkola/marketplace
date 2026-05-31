@@ -176,8 +176,25 @@ between.
      review — the backend has NOT said anything is missing. Pull get_person +
      get_person_emails, then fill any field you can **confirm** and that isn't
      already correct, via update_person:
-     - company — often the registrable name of their corporate email domain
-       (skip generic providers like gmail.com); or a confirmed employer.
+     - name — if the contact has no real name and is displayed as a raw email
+       address (the card shows e.g. "jane@example.com"), derive the name from
+       the email local-part and write it so the DISPLAYED name actually
+       changes. Setting first_name alone may NOT update the visible card —
+       Kola renders the card from a separate display / full-name field, so
+       update that field too (check the people schema / update_person params
+       for the right field name). Only fill what you can defend: "jane@…" ->
+       first name "Jane", display name "Jane"; leave the last name empty
+       unless the local part or a signature gives it.
+     - company — first look for the answer already INSIDE Kola: search for
+       other people who share this contact's email domain (skip generic
+       providers like gmail.com) and reuse the company name / record already
+       set on those rows — that's the canonical value your own network uses,
+       and it resolves personal-looking domains (e.g. a founder's namesake
+       domain) that you could never guess from the string alone. Only when
+       nothing in Kola matches, fall back to the registrable name of the
+       domain or a confirmed employer. Do NOT invent a company from a domain
+       that reads like a personal name unless Kola or a reliable source
+       confirms it's an org.
      - position / role, location — from an email signature or thread context.
      - phone — e.g. a number already sitting in their notes or a signature;
        copy it into the phone field. Don't invent a number.
@@ -228,6 +245,7 @@ between.
        | Check | Looked at | Planned change | Result |
        |-------|-----------|----------------|--------|
        | people-enrich-42 | Ada L. — no company; emails @analyticalengine.com | set company | applied: company = Analytical Engine |
+       | people-enrich-88 | shown as "jane@example.com"; another Kola contact on example.com has company set | set name + reuse company | applied: name = Jane, company = <from Kola> |
        | people-enrich-77 | Bob R. — full profile already | none | skipped (nothing to add) |
 
        Summary: A enriched, B skipped of N checks.
