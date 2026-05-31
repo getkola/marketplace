@@ -8,7 +8,7 @@ description: >
   "prep me for the meeting with Y" / "подготовь меня к встрече с Y",
   "what do I know about Z" / "что я знаю о Z",
   "remind me who X is" / "напомни, кто такой X", or "background on
-  <person>" / "расскажи про <человека>".
+  [person]" / "расскажи про [человека]".
 argument-hint: '<name | email | linkedin url | telegram handle> [--depth full|fast]'
 ---
 

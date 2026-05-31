@@ -8,7 +8,7 @@ description: >
   "добавь Y в список Z", "remove Y from Z" / "убери Y из Z",
   "rename Z to W" / "переименуй Z в W", "show my Investors list" /
   "покажи список инвесторов", "what lists do I have" / "какие у меня
-  списки", or "list everyone in <list>" / "покажи всех из <списка>".
+  списки", or "list everyone in [list]" / "покажи всех из [списка]".
 argument-hint: '<create|add|remove|show|rename|delete|ls> [args]'
 ---
 
