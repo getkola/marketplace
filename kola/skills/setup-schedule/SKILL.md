@@ -46,10 +46,11 @@ Two consequences you must honour:
    for an explicit yes. For example:
 
    > "I can set up a recurring Kola data-health sweep that runs **every
-   > hour** — it enriches companies (descriptions, domains), merges clear
-   > duplicates, archives obvious junk contacts, and acts only when it's
-   > confident. It only runs while Kola.app is open on this machine. Want
-   > me to schedule it hourly?"
+   > hour** — it enriches companies (descriptions, domains), enriches
+   > contacts (company, role, phone from what's already on file), merges
+   > clear duplicates, archives obvious junk contacts, and acts only when
+   > it's confident. It only runs while Kola.app is open on this machine.
+   > Want me to schedule it hourly?"
 
    Honour an explicit cadence in the user's request (`daily` / `weekly`)
    if they gave one. Don't proceed on silence.
@@ -106,13 +107,17 @@ between.
    fix. That judgment is yours.
 
    The worklist is prioritised and self-advancing, and ONE tick does ONE
-   kind of work: the batch you get back is either all `company-enrich-<id>`
-   (companies missing a domain/description) OR all `people-archive-<id>`
-   (contacts surfaced for archive review) — the two kinds alternate from
-   tick to tick, so don't expect both in the same run. Just work the batch
-   you got; the next tick does the other kind and picks up where it left
-   off. The people batch is ordered worst-first: role/automated junk
-   addresses, then contacts with no engagement at all, then active contacts.
+   kind of work: the batch you get back is all one kind —
+   `company-enrich-<id>` (companies missing a domain/description),
+   `people-archive-<id>` (contacts surfaced for archive review), OR
+   `people-enrich-<id>` (active contacts surfaced for a profile review).
+   The three kinds rotate from tick to tick, so don't expect a mix in the
+   same run. Just work the batch you got; the next tick does the next kind
+   and picks up where it left off. A `people-archive` batch is ordered
+   worst-first (role/automated junk addresses, then no-engagement contacts,
+   then active ones); a `people-enrich` batch is ordered strongest-first
+   (your most-engaged contacts) and is a profile review, NOT a removal
+   review — nothing in it is flagged as wrong or missing.
 
 1. Investigate each check before doing anything. Pull the actual data for
    its subjects FIRST — get_person, get_person_emails, get_company, or the
@@ -167,6 +172,20 @@ between.
        junk -> keep.
      When in doubt, keep. Archive is reversible, but needlessly archiving a
      real contact is exactly the kind of churn an unattended run must avoid.
+   - A `people-enrich-<id>` check is an active contact surfaced for a profile
+     review — the backend has NOT said anything is missing. Pull get_person +
+     get_person_emails, then fill any field you can **confirm** and that isn't
+     already correct, via update_person:
+     - company — often the registrable name of their corporate email domain
+       (skip generic providers like gmail.com); or a confirmed employer.
+     - position / role, location — from an email signature or thread context.
+     - phone — e.g. a number already sitting in their notes or a signature;
+       copy it into the phone field. Don't invent a number.
+     Ration web search the same way (≤2 ops, prefer the company's own site).
+     update_person edits are reversible, so solid evidence is enough — you do
+     not need merge-level certainty. If there's nothing you can confidently
+     add or correct, KEEP (skip) — an enrich check with no real improvement is
+     a no-op, never a guess.
 
    **When you cannot confirm, skip — full stop.** If web search is
    inconclusive, the evidence is thin, or you'd be guessing, leave the row
@@ -204,6 +223,15 @@ between.
 
        Summary: A applied, B archived, C skipped of N checks.
 
+   A people-enrich tick:
+
+       | Check | Looked at | Planned change | Result |
+       |-------|-----------|----------------|--------|
+       | people-enrich-42 | Ada L. — no company; emails @analyticalengine.com | set company | applied: company = Analytical Engine |
+       | people-enrich-77 | Bob R. — full profile already | none | skipped (nothing to add) |
+
+       Summary: A enriched, B skipped of N checks.
+
    For a merge, record the dropped row's name + emails in the "Looked at"
    cell BEFORE merging, so a bad merge can be traced. If the worklist came
    back empty, the report is one line:
@@ -229,7 +257,7 @@ between.
   scheduler runs detached from this machine — there is no remote Kola
   endpoint. For always-on cleanup independent of Claude, use Kola's
   in-app Agents (Settings → Agents) instead.
-- It never hard-deletes. It applies confident changes directly (description,
-  domain, name, archive, exact-identity merge) and skips anything it can't
-  confirm — it does not draft notes or queue rows for a review that never
-  happens.
+- It never hard-deletes. It applies confident changes directly (company/
+  contact description, domain, name, contact fields, archive, exact-identity
+  merge) and skips anything it can't confirm — it does not draft notes or
+  queue rows for a review that never happens.
