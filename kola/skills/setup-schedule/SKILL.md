@@ -88,13 +88,13 @@ Two consequences you must honour:
      it is what makes a live schedule self-describing (you can open a run
      and see which routine version produced it). This stamp must equal
      this skill's own version (the `version` in plugin.json — currently
-     `1.1.20`). If the literal below has drifted from the skill version,
+     `1.1.21`). If the literal below has drifted from the skill version,
      update the stamp to the current version as you install, so the cron
      snapshot records the version it actually ran.
 
 4. **Confirm back.** Report the cadence, the model the run uses (or that
    the user must pick a cheap one manually if the scheduler has no model
-   setting), the **routine version installed** (`routine v1.1.20`, and the
+   setting), the **routine version installed** (`routine v1.1.21`, and the
    old→new version when you refreshed a stale schedule), the next run time,
    and how to change or stop it ("say 'reschedule Kola to daily' or 'stop
    the Kola schedule'"). Remind them once: it only does anything while
@@ -105,7 +105,7 @@ Two consequences you must honour:
 Hand this to the `schedule` skill as the prompt to run on the cadence:
 
 ```
-Kola data-health sweep (routine v1.1.20). Work through the Kola MCP tools.
+Kola data-health sweep (routine v1.1.21). Work through the Kola MCP tools.
 This run is
 UNATTENDED and NOBODY reviews it afterwards — so there is no point drafting
 notes or queueing rows for later. The rule is binary: when you are
@@ -274,7 +274,7 @@ between.
 
    A company-enrich tick:
 
-       Kola data-health run — <ISO date & time> — routine v1.1.20
+       Kola data-health run — <ISO date & time> — routine v1.1.21
 
        | Check | Looked at | Planned change | Result |
        |-------|-----------|----------------|--------|
@@ -306,7 +306,7 @@ between.
    For a merge, record the dropped row's name + emails in the "Looked at"
    cell BEFORE merging, so a bad merge can be traced. If the worklist came
    back empty, the report is one line:
-   "Kola data-health run <datetime> (routine v1.1.20) — nothing to check."
+   "Kola data-health run <datetime> (routine v1.1.21) — nothing to check."
 
    Do NOT write the report (or anything else) to disk — the run's
    transcript in the task history is the durable record. No log file.
