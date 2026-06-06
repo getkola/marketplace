@@ -174,6 +174,16 @@ content**. Get those right and the write-up is easy.
    placeholders only if you can't infer them.
 
 9. **Save it back — read first, append, never overwrite.**
+   - **Link the people first.** In the body you're about to save, write
+     every person you confidently resolved in step 7 as a mention link:
+     `[Display Name](https://getkola.app/o/person/<id>)` (the person's
+     `link` field from `resolve_person` / `get_person` is exactly this URL).
+     First occurrence in the body is enough; later occurrences stay plain.
+     Kola turns these into person chips and back-references: the note shows
+     up in each person's `mentioned_in_notes` and feeds their engagement
+     signal. A name you could NOT resolve stays plain text — never guess an
+     id, and never link a low-confidence match. (This is for the **saved
+     note only** — chat output and `--style email` keep plain names.)
    - **Find any existing note.** A recording usually already has a note
      attached (`recording_id` on the note, surfaced as `rec_*`); when you
      summarized a note directly you already have its id. Otherwise scan
@@ -182,12 +192,14 @@ content**. Get those right and the write-up is easy.
      write blind.
    - **If a note exists, append.** Call `update_note(note_id, body=<existing
      body> + "\n\n---\n\n" + <summary>)` — preserve everything that's
-     already there (the user's own jottings, prior AI passes) and add the new
-     summary at the **end**. Do **not** replace the body or touch the title.
+     already there (the user's own jottings, prior AI passes, and their
+     existing mention links) and add the new summary at the **end**. Do
+     **not** replace the body or touch the title.
    - **If no note exists**, create one: `create_note(body=<summary>,
      title="Summary: <call title> · <date>")`.
    - Either way the result is recallable by `search_notes` /
-     `semantic_search_notes` and feeds future `/kola:meeting-brief` passes.
+     `semantic_search_notes` and feeds future `/kola:meeting-brief` passes
+     (mention links are exactly what its `mentioned_in_notes` reads).
      Confirm the note id and whether you appended or created. Without
      `--save`, end by asking whether to save.
 

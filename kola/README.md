@@ -82,7 +82,10 @@ The plugin talks to the local Kola MCP server, which exposes:
   `merge_people`, `list_archived`.
 - Per-channel history — `get_person_emails`,
   `get_person_telegram_messages`, `get_person_whatsapp_messages`,
-  `get_person_linkedin_messages`.
+  `get_person_linkedin_messages`, `get_person_slack_messages`.
+  `get_person` returns `channel_message_counts` (plus `email_count` on
+  the row) so callers skip channels that are empty instead of probing
+  them.
 - Semantic recall — `semantic_search_messages` (message bodies across
   Gmail / Telegram / WhatsApp / LinkedIn / calendar),
   `semantic_search_people` (profiles), `semantic_search_companies`,

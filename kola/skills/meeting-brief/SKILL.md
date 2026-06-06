@@ -25,22 +25,35 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    - Multiple matches → list the top 5 by recency (`COALESCE(updated_at, created_at) DESC`) and ask the user which one.
    - Zero matches → say so and stop. Offer to capture them via `/kola:save-contact`.
 
-2. **Hydrate.** Call `get_person` for the canonical row, then in parallel:
-   - `get_person_emails` — recent Gmail history (cap to last 10 most recent).
-   - `get_person_telegram_messages` — recent DMs (cap to last 10).
-   - `get_person_whatsapp_messages` — recent WhatsApp (cap to last 10).
-   - `get_person_linkedin_messages` — recent LinkedIn DMs (cap to last 10).
+2. **Hydrate.** Call `get_person` for the canonical row FIRST — it carries
+   the skip-signals that decide what else is worth fetching:
+   `channel_message_counts` ({linkedin, telegram, whatsapp, slack}),
+   `email_count`, and `mentioned_in_notes` (the full list of notes that
+   mention this person). Then, in parallel, fetch ONLY the non-empty
+   sources — never call a channel tool whose count is 0:
+   - `get_person_emails` (if `email_count` > 0) — recent Gmail history (cap to last 10 most recent).
+   - `get_person_telegram_messages` (if `channel_message_counts.telegram` > 0) — recent DMs (cap to last 10).
+   - `get_person_whatsapp_messages` (if `channel_message_counts.whatsapp` > 0) — recent WhatsApp (cap to last 10).
+   - `get_person_linkedin_messages` (if `channel_message_counts.linkedin` > 0) — recent LinkedIn DMs (cap to last 10).
+   - `get_person_slack_messages` (if `channel_message_counts.slack` > 0) — recent Slack DMs (cap to last 10).
+   - `get_note` for the freshest few `mentioned_in_notes` entries (you already have their ids and titles — no searching needed).
    - `list_custom_fields` — for any per-install fields set on this person, format the values via the person's `custom_fields` object.
-   - `semantic_search_notes` — query by the person's name (and company) to surface notes you've jotted that mention them. Dedupe against `people.notes`, which you already have.
+   - `semantic_search_notes` — query by the person's name (and company) to surface notes that discuss them *without* a mention link. Dedupe against `mentioned_in_notes` and `people.notes`, which you already have.
    - `semantic_search_recordings` — query by the person's name (and company) to surface call transcripts where they came up; fetch the full text with `get_recording_transcript` only for the closest hit.
 
-   Notes and recordings aren't person-scoped, so a hit is a *candidate* —
-   keep only snippets that plainly reference this person, and drop the rest.
+   On an older Kola app `channel_message_counts` may be absent from the
+   row — only then fall back to calling the channel tools blind.
+
+   Notes and recordings aren't person-scoped, so a semantic hit is a
+   *candidate* — keep only snippets that plainly reference this person,
+   and drop the rest.
 
    If `--depth fast`, skip the message-history fetches and the
-   notes/recordings semantic searches, and use only the counts already on
-   `get_person` (`email_count`, `telegram_dm_count`, `whatsapp_dm_count`,
-   `calendar_event_count`).
+   notes/recordings semantic searches, and use only what `get_person`
+   already returned (`channel_message_counts`, `email_count`,
+   `calendar_event_count` + `calendar_event_count_12m` +
+   `calendar_last_event_at` for meeting recency, `mentioned_in_notes`
+   titles).
 
 3. **Render the memo** in this exact order — headers omitted when their section is empty:
 
