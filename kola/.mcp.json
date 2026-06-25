@@ -2,8 +2,8 @@
   "mcpServers": {
     "kola": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "mcp-remote@latest", "http://127.0.0.1:47900/mcp"]
+      "command": "/Applications/Kola.app/Contents/Resources/backend/kola-backend/kola-backend",
+      "args": ["mcp-bridge", "http://127.0.0.1:47900/mcp"]
     }
   }
 }
