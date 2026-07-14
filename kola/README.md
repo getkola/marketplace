@@ -37,8 +37,7 @@ once after install so the MCP server connects.
 | `/kola:custom-fields <subcommand>` | Manage the per-install custom-field schema — your own columns on every person row. |
 | `/kola:recent-activity [--days N]` | Cross-channel timeline of who you've interacted with lately, deduped by person and sorted by most-recent-touch. |
 | `/kola:summarize <call\|note\|topic>` | Professional summary of a recorded call's transcript or a note — TL;DR, key points, decisions, action items. Summarizes in the source language by default (handles Russian/Ukrainian/mixed), strips transcription noise, and can save the recap back as a note. |
-| `/kola:setup-schedule [hourly\|daily\|weekly]` | Offer to set up a recurring data-health sweep (de-dupe people, archive junk contacts, queue uncertain rows for review) via Claude's scheduler. Defaults to hourly. Only runs while Kola.app is open. |
-| `/kola:customize` | Plugin customization (also the Cowork "Customize" button). For now asks one thing — how often the data-health sweep should run — and sets up the schedule. |
+| `/kola:customize` | Plugin customization (also the Cowork "Customize" button). For now does one thing — allows all of Kola's MCP tools so the plugin runs without per-tool prompts. |
 
 ## Commands
 
