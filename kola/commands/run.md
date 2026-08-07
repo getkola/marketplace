@@ -42,4 +42,6 @@ Make sure Kola.app is running so the local MCP server at `127.0.0.1:47900` is re
 
    On success, report `Kola started — MCP server is up.` On timeout, report that Kola was launched but the MCP server didn't come up within 30s, and suggest the user check Kola's Settings → MCP.
 
-5. **Don't restart MCP clients.** This command only starts the app. If Claude Code's MCP client connected before Kola was up, the user may need to reload the session for `mcp__kola__*` tools to appear — mention this only if step 4 had to launch the app (not when it was already running).
+5. **Don't restart MCP clients.** This command only starts the app. If Claude Code's MCP client connected before Kola was up, the user may need to reload the session for Kola's tools to appear — mention this only if step 4 had to launch the app (not when it was already running).
+
+   Installed through this plugin the tools are named `mcp__plugin_kola_kola__*`. They are named `mcp__kola__*` only when the server comes from a project `.mcp.json` entry called `kola`; the prefix is chosen by the client, not by Kola.

@@ -20,8 +20,17 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
 
 1. **Resolve the person.** Pick the best Kola tool for the input:
    - Plain name → `search_people` (substring on display_name).
-   - Email → `query_people` with `WHERE email1 = ? OR email2 = ? OR email3 = ? OR email4 = ?` over `v_people_full`.
-   - LinkedIn URL or Telegram handle → `query_people` against `linkedin_url` / `telegram_handle`.
+   - Email → `query_people` over `v_people_full`. The view carries ONE email
+     column, `email1` (the primary). Every other address for that person
+     lives in `emails_csv`, which is comma-wrapped so a lookup needs no join:
+     `WHERE email1 = :email OR emails_csv LIKE '%,' || :email || ',%'`.
+     There is no `email2` / `email3` / `email4` column — naming one fails the
+     whole query with `no such column`.
+   - LinkedIn URL or Telegram handle → `query_people` against `linkedin_url`
+     / `telegram_username`. The column is `telegram_username`, not
+     `telegram_handle`.
+   - **Verify column names with `describe_people_schema` before writing SQL.**
+     `v_people_full` evolves; this list is a starting point, not a contract.
    - Multiple matches → list the top 5 by recency (`COALESCE(updated_at, created_at) DESC`) and ask the user which one.
    - Zero matches → say so and stop. Offer to capture them via `/kola:save-contact`.
 
@@ -35,6 +44,13 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    - `get_person_telegram_messages` (if `channel_message_counts.telegram` > 0) — recent DMs (cap to last 10).
    - `get_person_whatsapp_messages` (if `channel_message_counts.whatsapp` > 0) — recent WhatsApp (cap to last 10).
    - `get_person_linkedin_messages` (if `channel_message_counts.linkedin` > 0) — recent LinkedIn DMs (cap to last 10).
+   - `get_person_linkedin_activity` — their recent LinkedIn posts, reposts
+     and comments. This is what they have said in PUBLIC, which is often the
+     freshest signal on a person you have not messaged lately: a new job, a
+     launch, a subject they keep returning to. Unlike the DM tools it is
+     worth calling even when `channel_message_counts.linkedin` is 0 —
+     activity is scraped from their profile, not from a conversation with
+     you, so the two counts are unrelated.
    - `get_person_slack_messages` (if `channel_message_counts.slack` > 0) — recent Slack DMs (cap to last 10).
    - `get_note` for the freshest few `mentioned_in_notes` entries (you already have their ids and titles — no searching needed).
    - `list_custom_fields` — for any per-install fields set on this person, format the values via the person's `custom_fields` object.
@@ -48,10 +64,10 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    *candidate* — keep only snippets that plainly reference this person,
    and drop the rest.
 
-   If `--depth fast`, skip the message-history fetches and the
-   notes/recordings semantic searches, and use only what `get_person`
-   already returned (`channel_message_counts`, `email_count`,
-   `calendar_event_count` + `calendar_event_count_12m` +
+   If `--depth fast`, skip the message-history fetches, the LinkedIn
+   activity fetch, and the notes/recordings semantic searches, and use only
+   what `get_person` already returned (`channel_message_counts`,
+   `email_count`, `calendar_event_count` + `calendar_event_count_12m` +
    `calendar_last_event_at` for meeting recency, `mentioned_in_notes`
    titles).
 
@@ -78,6 +94,9 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    ## Recent threads (last <N> across channels, newest first)
    [<date> · <channel>] <subject or first line>
      <one-line summary>
+
+   ## Publicly, on LinkedIn
+   [<date>] <post, repost or comment> — <one-line gist>
 
    ## Notes
    <freeform notes from people.notes, verbatim>

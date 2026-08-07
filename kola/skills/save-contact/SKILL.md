@@ -18,18 +18,26 @@ Single ingest path for adding a person or patching an existing one.
 
 ## Instructions
 
-1. **Parse the input.** Pull out as many of these as you can find:
+1. **Parse the input.** These are exactly the fields `create_person` and
+   `update_person` accept — parsing anything else means the data is read and
+   then silently dropped:
    - `display_name` (required if creating; for updates, used to locate the row)
    - `first_name`, `last_name`
-   - `email1` (and `email2..4` if multiple)
+   - `email1` — the PRIMARY address, and the only one these tools take
    - `linkedin_url`
-   - `telegram_handle`, `whatsapp_phone`
-   - `phone`
+   - `phone`, `phone2`, `phone3`, `phone4`
    - `company`, `position`
    - `location`
    - `birthday` (ISO `YYYY-MM-DD`)
    - `notes` — anything that didn't fit a structured slot, including
      "where / how did I meet them" context
+
+   **What has no slot, and must go in `notes` rather than be thrown away.**
+   A Telegram handle, a WhatsApp number, and any address after the first.
+   Kola learns those from the accounts it syncs — a handle typed by hand has
+   no column on the write path, so write it into `notes` as plain text
+   (`Telegram: @janesmith`) and say in the confirmation that you did. Kola's
+   substring search covers `notes`, so it stays findable.
 
    If the input is a paste with both fielded data and prose, treat the
    prose as `notes`.
@@ -37,7 +45,12 @@ Single ingest path for adding a person or patching an existing one.
 2. **Check for an existing match.** In order (first hit wins — mirrors
    Kola's own upsert ladder):
    1. `query_people` exact match on `linkedin_url` if present
-   2. `query_people` exact match on `email1..email4` if present
+   2. `query_people` on the email if present. `v_people_full` has ONE email
+      column, `email1`; the person's other addresses live in `emails_csv`,
+      comma-wrapped so no join is needed:
+      `WHERE email1 = :email OR emails_csv LIKE '%,' || :email || ',%'`.
+      There is no `email2` / `email3` / `email4` column — naming one errors
+      the query, and a failed dedupe check creates a duplicate person.
    3. `search_people` substring on `display_name`
 
    If one match found → confirm with the user before updating ("I see

@@ -32,16 +32,20 @@ Defaults: `type=text`, no description. Allowed types: `text`,
 Before creating:
 - `key` must match `^[a-z][a-z0-9_]*$`. Pitch a fixed key if the user
   proposed something else.
-- `key` must not collide with a `v_people_full` reserved column
-  (`display_name`, `first_name`, `last_name`, `email1`..`email4`,
-  `company`, `position`, `linkedin_url`, `telegram_handle`,
-  `whatsapp_jid`, `whatsapp_phone`, `phone`, `birthday`, `location`,
-  `notes`, `archived`, `email_count`, `telegram_dm_count`,
-  `whatsapp_dm_count`, `calendar_event_count`, `linkedin_dm_count`,
-  `list_ids_csv`, `list_names_csv`, `created_at`, `updated_at`,
-  `archived_at`, and the existing `cf_<key>` set). Kola's repo also
-  enforces this — if `create_custom_field` raises on a reserved key,
-  echo the error and ask for a different key.
+- `key` must not collide with a built-in `v_people_full` column.
+  **Read the live list — never a list written here.** Call
+  `describe_people_schema` and treat every column it returns as taken,
+  including the existing `cf_<key>` set.
+
+  There are around sixty built-in columns and Kola adds more as it
+  learns new channels, so a copy of the list in this file goes stale
+  and then misleads in both directions: it warns about names that are
+  free and stays silent about names that are not. `country`, `city`,
+  `headline`, `slack_dm_count` and `last_interaction_at` are all
+  built-in, and none of them looks reserved.
+
+  Kola's repository enforces this too. If `create_custom_field` raises
+  on a reserved key, echo the error and ask for a different key.
 - `key` and `type` are **immutable** once set. Warn the user before
   creating that they cannot rename the key or change the type later
   (only `label`, `description`, and `position` are editable).

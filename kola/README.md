@@ -26,6 +26,14 @@ Then make sure Kola.app is running (Settings → MCP in Kola shows the
 same endpoint this plugin's `.mcp.json` points at). Restart Claude Code
 once after install so the MCP server connects.
 
+**Kola must be installed in `/Applications`.** The plugin reaches the
+local server through a small bridge that ships inside the app bundle, and
+`.mcp.json` names its path directly:
+`/Applications/Kola.app/Contents/Resources/backend/kola-backend/kola-backend`.
+A copy in `~/Applications` or anywhere else leaves that path empty, and
+the server then fails to start with no tools and no explanation. Move the
+app to `/Applications` and restart Claude Code.
+
 ## Skills
 
 | Command | What it does |
@@ -97,9 +105,20 @@ The plugin talks to the local Kola MCP server, which exposes:
 - Files — `list_files`, `upload_file`, `delete_file`.
 - Accounts — `list_accounts`.
 
-You can also call these directly from Claude Code (`mcp__kola__<name>`)
-without going through the skills — the skills exist to wrap the common
-multi-tool workflows.
+You can also call these directly from Claude Code without going through
+the skills — the skills exist to wrap the common multi-tool workflows.
+
+**The tool name depends on where the server came from**, because the
+prefix is chosen by the client, not by Kola:
+
+| Kola's MCP server comes from | Tool name |
+|---|---|
+| this plugin | `mcp__plugin_kola_kola__<name>` |
+| a project `.mcp.json` entry named `kola` | `mcp__kola__<name>` |
+
+Installed through the plugin, it is the first form. If a tool call fails
+with `No such tool available: mcp__kola__<name>`, that is this difference
+and not a missing server.
 
 ## Privacy
 

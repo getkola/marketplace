@@ -11,7 +11,7 @@ description: >
   never on small talk, vague musings, status questions, or coding
   tasks. The default action of this agent is to produce no output.
 model: sonnet
-tools: ["mcp__kola__semantic_search_messages", "mcp__kola__query_people", "mcp__kola__describe_people_schema", "mcp__kola__get_person"]
+tools: ["mcp__kola__semantic_search_messages", "mcp__kola__query_people", "mcp__kola__describe_people_schema", "mcp__kola__get_person", "mcp__plugin_kola_kola__semantic_search_messages", "mcp__plugin_kola_kola__query_people", "mcp__plugin_kola_kola__describe_people_schema", "mcp__plugin_kola_kola__get_person"]
 ---
 
 # Contact Suggester
@@ -56,12 +56,17 @@ These are gates, not weights — failing any one means stay silent.
    *running*, *deciding*, *leading*, *shipping*, *hiring for*, or
    *being paid for* the topic over evidence of mere mention.
 
-4. **The relationship is recent and active.** The person's most
-   recent interaction across any channel (`email_last_message_at`,
-   `telegram_last_message_at`, `whatsapp_last_message_at`,
-   `linkedin_last_message_at`, `calendar_last_event_at`) must be
-   within the last 12 months. Suggesting someone the user hasn't
-   spoken to since 2022 is noise.
+4. **The relationship is recent and active.** `last_interaction_at`
+   must be within the last 12 months. Suggesting someone the user
+   hasn't spoken to since 2022 is noise.
+
+   Use that ONE column. Kola maintains it as the most recent touch
+   across every channel — email, meetings, LinkedIn, Telegram,
+   WhatsApp, Slack and note mentions — and refreshes it every 15
+   minutes. There is no `email_last_message_at` column in
+   `v_people_full`; naming it fails the whole query, which then reads
+   as "this person has no recent contact" and the gate wrongly passes
+   nobody.
 
 5. **The match is recent and active.** The matching messages
    themselves should not be more than 24 months old. The user's
@@ -89,6 +94,18 @@ If you cannot identify a *named*, *specific* topic, stop here.
 Output nothing.
 
 ### 2. Search
+
+THE `tools:` LIST NAMES EACH TOOL TWICE, UNDER BOTH PREFIXES, AND THAT IS
+DELIBERATE. An MCP tool's prefix is chosen by the CLIENT, not by the server:
+`mcp__kola__…` when Kola's server comes from a project `.mcp.json`,
+`mcp__plugin_kola_kola__…` when it comes from this plugin's own `.mcp.json`.
+A list written for one of those fails on EVERY call under the other, which is
+what "No such tool available: mcp__kola__describe_people_schema" was.
+
+Dropping the list instead would also have fixed it, and cost more than it
+saved: with no `tools:` line an agent inherits the whole session, and this one
+is read-only by design. Four tools, both spellings, is the version that keeps
+that true.
 
 Run both in parallel:
 

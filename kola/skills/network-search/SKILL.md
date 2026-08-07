@@ -77,12 +77,19 @@ confirm with `search_people` / `resolve_person`.
 4. **Run the search.**
    - **Structured** (`query_people`): single SELECT against `v_people_full`
      (also `v_lists`, `v_custom_field_defs`). It exposes `location`, `city`,
-     `state`, `country`, `notes`, `company`, `email1..email4`,
-     `*_dm_count`, `email_count`, `calendar_event_count`, `list_ids_csv`,
-     `list_names_csv` (comma-wrapped — match `LIKE '%,Name,%'`), and
+     `state`, `country`, `notes`, `company`, `position`, `headline`,
+     `*_dm_count`, `email_count`, `calendar_event_count`,
+     `last_interaction_at`, `list_ids_csv`, `list_names_csv`, and
      `cf_<key>`. For location, OR across the structured columns AND a
      `notes LIKE` on the code: `WHERE country = 'PT' OR location LIKE
      '%Portugal%' OR notes LIKE '%Location: PT%' OR phone LIKE '+351%'`.
+
+     **Two columns are comma-wrapped and matched with `LIKE '%,x,%'`**, not
+     with `=`: `list_names_csv` (a person's lists) and `emails_csv` (every
+     address they have). `email1` is the primary address and the ONLY
+     numbered email column — there is no `email2`, `email3` or `email4`, and
+     naming one fails the whole query. To find a person by any address:
+     `WHERE email1 = :email OR emails_csv LIKE '%,' || :email || ',%'`.
    - **Profile semantic** (`semantic_search_people`): pass the
      natural-language description (role / place / bio). This is what catches
      "PT" in notes that substring "Portugal" misses.
