@@ -53,6 +53,13 @@ Single ingest path for adding a person or patching an existing one.
       the query, and a failed dedupe check creates a duplicate person.
    3. `search_people` substring on `display_name`
 
+   A match that looks like the same person under two rows is a duplicate,
+   not a new contact. `list_possible_duplicates` lists the pairs Kola
+   already suspects, with the evidence; offer `merge_people` only after the
+   user confirms. A merge done by mistake is undone WHOLE with
+   `split_person(undo_merge_id=…)` — the id is in `get_person`'s
+   `merged_from`. Confirm with the user before either call.
+
    If one match found → confirm with the user before updating ("I see
    Jane Smith @ Acme already — update them, or create a new row?").
    If multiple → list the top 5 and ask which.

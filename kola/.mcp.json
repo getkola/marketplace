@@ -1,9 +1,8 @@
 {
   "mcpServers": {
     "kola": {
-      "type": "stdio",
-      "command": "/Applications/Kola.app/Contents/Resources/backend/kola-backend/kola-backend",
-      "args": ["mcp-bridge", "http://127.0.0.1:47900/mcp"]
+      "type": "http",
+      "url": "https://mcp.getkola.app/mcp"
     }
   }
 }

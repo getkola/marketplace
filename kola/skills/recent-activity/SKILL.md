@@ -52,6 +52,14 @@ ranked by most-recent-touch, deduped by person.
    query with `no such column`, which is what this skill used to do on every
    run. `email_count` says how much mail there is, never when it arrived.
 
+   **For "real conversations only"** ("who did I actually talk to", "skip
+   the noise"), rank on `last_meaningful_interaction_at` instead. It moves
+   only for an exchange that counted: a sync running, a note being edited,
+   or an invitation sent to fifty people does not move it. It has no
+   per-channel twin, so write `—` in the Channel column. It is NULL for
+   people Kola has not measured yet; they drop out of this ranking, so say
+   so under the table.
+
    Call `describe_people_schema` first to confirm the live column names —
    the view evolves, and it is also where the `cf_*` columns are listed.
 

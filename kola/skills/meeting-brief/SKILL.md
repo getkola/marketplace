@@ -37,8 +37,9 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
 2. **Hydrate.** Call `get_person` for the canonical row FIRST — it carries
    the skip-signals that decide what else is worth fetching:
    `channel_message_counts` ({linkedin, telegram, whatsapp, slack}),
-   `email_count`, and `mentioned_in_notes` (the full list of notes that
-   mention this person). Then, in parallel, fetch ONLY the non-empty
+   `email_count`, `mentioned_in_notes` (the full list of notes that
+   mention this person), and `relationship` (`depth`, `freshness`,
+   `momentum`, `coverage` — see step 3). Then, in parallel, fetch ONLY the non-empty
    sources — never call a channel tool whose count is 0:
    - `get_person_emails` (if `email_count` > 0) — recent Gmail history (cap to last 10 most recent).
    - `get_person_telegram_messages` (if `channel_message_counts.telegram` > 0) — recent DMs (cap to last 10).
@@ -56,6 +57,21 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    - `list_custom_fields` — for any per-install fields set on this person, format the values via the person's `custom_fields` object.
    - `semantic_search_notes` — query by the person's name (and company) to surface notes that discuss them *without* a mention link. Dedupe against `mentioned_in_notes` and `people.notes`, which you already have.
    - `semantic_search_recordings` — query by the person's name (and company) to surface call transcripts where they came up; fetch the full text with `get_recording_transcript` only for the closest hit.
+   - `get_person_circle(person_id, limit=10)` — who else turns up alongside
+     them: co-recipients, co-attendees, shared groups, same company. Each row
+     has per-channel shared counts and `count`. Pass `min_strength=40` to keep
+     only people the USER is also close to (40 is the "warm" band Kola's
+     person card uses); people Kola has not measured are then left out.
+   - `get_person_telegram_groups(person_id)` (if they have Telegram) — the
+     groups you share with them. Local and cheap; this is often the "where do
+     I know them from" answer.
+   - `get_company_linkedin_news([company_id])` — optional, and only for the
+     ONE company they work at. Find the id with `query_companies` or
+     `semantic_search_companies` on the row's `company`. It fetches live from
+     LinkedIn, is slow, and shares a cap of 30 live LinkedIn fetches an hour
+     with `get_person_linkedin_activity`. Read `status` per company; on
+     `rate_limited`, `busy` or `budget_exhausted` skip the section rather
+     than retry.
 
    On an older Kola app `channel_message_counts` may be absent from the
    row — only then fall back to calling the channel tools blind.
@@ -65,7 +81,8 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    and drop the rest.
 
    If `--depth fast`, skip the message-history fetches, the LinkedIn
-   activity fetch, and the notes/recordings semantic searches, and use only
+   activity and company-news fetches, the circle and Telegram-group calls,
+   and the notes/recordings semantic searches, and use only
    what `get_person` already returned (`channel_message_counts`,
    `email_count`, `calendar_event_count` + `calendar_event_count_12m` +
    `calendar_last_event_at` for meeting recency, `mentioned_in_notes`
@@ -76,6 +93,7 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    ```
    # <display_name>
    <position> @ <company> · <location>
+   Strength <depth>/100 · <momentum in words> · last real conversation <date>
 
    ## Identity
    - Email: …
@@ -91,12 +109,19 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    ## Lists
    <name>, <name>
 
+   ## Around them
+   <name> — <shared: 12 emails, 3 meetings>   (from get_person_circle)
+   Telegram groups: <title>, <title>
+
    ## Recent threads (last <N> across channels, newest first)
    [<date> · <channel>] <subject or first line>
      <one-line summary>
 
    ## Publicly, on LinkedIn
    [<date>] <post, repost or comment> — <one-line gist>
+
+   ## Company news (<company>, LinkedIn, <live|cache>)
+   [<date>] <one-line gist>
 
    ## Notes
    <freeform notes from people.notes, verbatim>
@@ -105,6 +130,14 @@ Pulls Kola's full memory on one person into a single, scannable prep memo.
    [note · <date>] <title> — <one-line gist>
    [call · <date>] <recording title> — <one-line gist of the relevant moment>
    ```
+
+   **The strength line.** Print `depth` as the one number and say the rest
+   in words: momentum `growing` / `cooling` / `stable` → "getting closer" /
+   "cooling off" / "steady" (`unknown` → leave momentum out); `last_meaningful_interaction_at` from the row
+   as the date. **A missing key means Kola could not measure it, never
+   zero** — write "not measured yet" instead of a number. If `coverage`
+   marks a source `partial`, add "(may be low: <source> is only partly
+   synced)". Omit the line when none of it is measured.
 
 4. **Closing line — what to ask about.** From the recent thread summaries,
    propose 2–3 specific topics worth bringing up. These should be

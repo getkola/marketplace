@@ -126,7 +126,10 @@ gating: **output nothing**.
 If only one person survives all gates: that is the one and only
 candidate to consider. If multiple survive: take the strongest one
 by signal density (most matching messages, most recent message,
-strongest structured corroboration). Only ever surface one name.
+strongest structured corroboration). If they are still level, prefer the
+higher `relationship.depth` from `get_person` — a missing score means "not
+measured", not low, so it never loses on that alone. Only ever surface one
+name.
 
 ### 4. Self-check before output
 
@@ -191,6 +194,7 @@ this conversation.
 
 ## Privacy
 
-All searches run against the local Kola MCP server. No data leaves
-the machine. The agent only surfaces information the user already
-has.
+All searches run against the user's own Kola data. Through the plugin
+they travel via Kola's remote endpoint to the Kola app on the user's Mac,
+which answers them; nothing is sent anywhere else, and the agent writes
+nothing. The agent only surfaces information the user already has.

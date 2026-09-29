@@ -25,10 +25,10 @@ content**. Get those right and the write-up is easy.
 
 | Tool | Returns | Use it for |
 |---|---|---|
-| `list_recordings` | recordings newest-first (no transcript body) | "my last call", "the call from Tuesday" |
+| `list_recordings` | recordings newest-first (no transcript body); `since`/`until` bound the start date | "my last call", "the call from Tuesday" |
 | `search_recordings` | full rows incl. transcript, FTS over title+transcript | a name, project, or exact phrase from the call |
 | `semantic_search_recordings` | closest-chunk hits, recording inlined | "the call about pricing" — gist, not exact words |
-| `get_recording_transcript([ids])` | full transcript + `transcription_language`/`_prob` | hydrate once you know the recording id(s) |
+| `get_recording_transcript([ids])` | full transcript + `transcription_language`/`_prob`; `from_min`/`to_min` read one part of a long call | hydrate once you know the recording id(s) |
 | `search_notes` / `semantic_search_notes` | note rows / chunk hits | summarizing a typed or AI note instead of a call |
 | `get_note(id)` | one note with body | hydrate a note by id |
 
@@ -36,6 +36,9 @@ content**. Get those right and the write-up is easy.
 
 1. **Find the source.** Route on what the user gave you:
    - **"last call" / "latest recording" / "most recent"** → `list_recordings(limit=10)`, take the newest with `status == 'recorded'`.
+   - **A day** ("the call from Tuesday") → `list_recordings(since=<date>, until=<date>)`.
+     Both are UTC, inclusive, `YYYY-MM-DD`; a bare `until` date covers the
+     whole day. Don't page backwards to find a day.
    - **A topic or person** ("the call about pricing", "my call with Anna") →
      run `search_recordings` (exact words) **and** `semantic_search_recordings`
      (gist) in one batch; merge by `id`.
@@ -50,13 +53,29 @@ content**. Get those right and the write-up is easy.
    - **Zero matches** → say so and name what you searched.
 
 2. **Hydrate the full text.**
-   - Recordings: `get_recording_transcript([ids])`. The transcript is only
-     present when `transcription_status == 'done'`. Other states land in
-     `errors` — handle them honestly:
-     - `pending` / `transcribing` → "Kola hasn't transcribed this call yet
-       (the on-device transcription agent runs on a schedule, often
+   - Recordings: `get_recording_transcript([ids])`. Read
+     `transcription_status` on each item in `transcripts`:
+     - `done` → the final transcript. Use it.
+     - `live_draft` → the call is being recorded RIGHT NOW; `transcript` is
+       the draft so far. Summarize it only if the user asked about the
+       current call, and say the call is still going.
+     - `live_saved` → the call ended but the final transcript isn't ready;
+       `transcript` is the draft saved when recording stopped. Summarize it,
+       and add one line that this is a first draft and the final
+       transcript may differ.
+     Anything else lands in `errors` — handle it honestly:
+     - not transcribed yet and no draft → "Kola hasn't transcribed this call
+       yet (the on-device transcription agent runs on a schedule, often
        overnight). Nothing to summarize until it finishes." Stop.
      - `failed` → report `transcription_error`; offer no summary.
+   - **Long calls** — an hour of talk can be more text than one tool result
+     carries. If the transcript comes back cut off or the call is long
+     (`duration_ms` from `list_recordings`), read it in parts:
+     `from_min=0, to_min=20`, then `from_min=20, to_min=40`, and so on, and
+     summarize the whole call from all parts. A turn that crosses a boundary
+     appears in both parts — don't count it twice. A part needs stored
+     timings; a recording without them lands in `errors`, so fall back to
+     the full transcript.
    - Notes: use the `body` from `get_note` / the search hit.
    - **Multiple recordings** (e.g. "summarize all my calls with Acme this
      week"): fetch each transcript, then summarize them together with a

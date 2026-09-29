@@ -34,7 +34,9 @@ a missed contact is worse than an extra candidate.
 | `semantic_search_messages` | embedded MESSAGE BODIES (Gmail/Telegram/WhatsApp/LinkedIn/Calendar) | "what was discussed" — topics, expertise demonstrated in conversation |
 | `semantic_search_notes` | embedded NOTE text (your jottings + AI call notes) | "what was discussed" in your own notes — recall a person from something you wrote about a topic |
 | `semantic_search_recordings` | embedded CALL TRANSCRIPTS | "what was discussed" on recorded calls — recall a person from what was actually said on a call |
-| `query_people` → `v_people_full` | structured columns incl. `location/city/state/country`, `notes`, `company`, counts, lists, `cf_<key>` | precise filters: "founders in PT", "everyone in my Investors list" |
+| `query_people` → `v_people_full` | structured columns incl. `location/city/state/country`, `notes`, `company`, counts, lists, relationship strength, `cf_<key>` | precise filters: "founders in PT", "everyone in my Investors list", "people I'm close to at Acme" |
+| `search_telegram` | Telegram's own search over EVERY chat and group at once (words only) | "who mentioned Postgres in Telegram" — group messages are not stored locally, so `semantic_search_messages` misses them |
+| `get_shared_circle` | people who appear in the circles of ALL 2–5 given people | "who could introduce me to X", "who do Anna and I both know" |
 
 **"кто это / who is this" → the first four. "о чём говорили / what was
 discussed" → `semantic_search_messages`, and for topics that live in your
@@ -57,6 +59,7 @@ confirm with `search_people` / `resolve_person`.
    | Who-they-are | "founders in Portugal", "designers I know", "anyone in fintech" | `query_people` (structured) **and** `semantic_search_people` **and** `search_people` |
    | What-was-discussed | "who's worked on rust compilers", "who pitched me on AI safety" | `semantic_search_messages`; add `semantic_search_notes` / `semantic_search_recordings` when the topic may live in your notes or on a recorded call |
    | Hybrid | "founders in PT who talked about fundraising" | structured/profile set first, then `semantic_search_messages` (+ notes/recordings), intersect by `id` |
+   | Introduction path | "who could introduce me to Anna", "who do Anna and Boris both know" | resolve each named person first, then `get_shared_circle(person_ids=[…])`; add `min_strength=40` to keep only people the user is close to |
 
 2. **Fan out across forms — Kola is multilingual and multi-source.** Names
    and places are stored inconsistently. Issue parallel calls in ONE tool
@@ -80,7 +83,12 @@ confirm with `search_people` / `resolve_person`.
      `state`, `country`, `notes`, `company`, `position`, `headline`,
      `*_dm_count`, `email_count`, `calendar_event_count`,
      `last_interaction_at`, `list_ids_csv`, `list_names_csv`, and
-     `cf_<key>`. For location, OR across the structured columns AND a
+     `cf_<key>`. Relationship strength is also there:
+     `relationship_depth_score` (0-100, "warm" from 40),
+     `relationship_momentum_label` (`growing` / `cooling` / `stable`) and
+     `last_meaningful_interaction_at`. NULL means "not measured", never
+     "weak" — so `WHERE relationship_depth_score >= 40` is right for "people
+     I'm close to", but never filter `< 40` to mean "people I barely know". For location, OR across the structured columns AND a
      `notes LIKE` on the code: `WHERE country = 'PT' OR location LIKE
      '%Portugal%' OR notes LIKE '%Location: PT%' OR phone LIKE '+351%'`.
 
@@ -97,6 +105,10 @@ confirm with `search_people` / `resolve_person`.
      variant, the city, the ISO code, the phone prefix).
    - **Message semantic** (`semantic_search_messages`): only for
      what-was-discussed. Default `limit` 20; cap at `--limit N`.
+   - **Telegram groups** (`search_telegram`): for what-was-discussed when
+     the talk may be in Telegram groups. It takes words only, no sender; a
+     hit carries `chat_id` and `chat_title`, and the sender still has to be
+     resolved to a person with `search_people` / `resolve_person`.
    - **Notes / recordings semantic** (`semantic_search_notes`,
      `semantic_search_recordings`): for what-was-discussed topics that may
      live in your own notes or on recorded calls. Hits carry no
