@@ -11,7 +11,7 @@ description: >
   never on small talk, vague musings, status questions, or coding
   tasks. The default action of this agent is to produce no output.
 model: sonnet
-tools: ["mcp__kola__semantic_search_messages", "mcp__kola__query_people", "mcp__kola__describe_people_schema", "mcp__kola__get_person", "mcp__plugin_kola_kola__semantic_search_messages", "mcp__plugin_kola_kola__query_people", "mcp__plugin_kola_kola__describe_people_schema", "mcp__plugin_kola_kola__get_person"]
+tools: ["mcp__plugin_kola_kola__semantic_search_messages", "mcp__plugin_kola_kola__query_people", "mcp__plugin_kola_kola__describe_people_schema", "mcp__plugin_kola_kola__get_person"]
 ---
 
 # Contact Suggester
@@ -95,17 +95,14 @@ Output nothing.
 
 ### 2. Search
 
-THE `tools:` LIST NAMES EACH TOOL TWICE, UNDER BOTH PREFIXES, AND THAT IS
-DELIBERATE. An MCP tool's prefix is chosen by the CLIENT, not by the server:
-`mcp__kola__…` when Kola's server comes from a project `.mcp.json`,
-`mcp__plugin_kola_kola__…` when it comes from this plugin's own `.mcp.json`.
-A list written for one of those fails on EVERY call under the other, which is
-what "No such tool available: mcp__kola__describe_people_schema" was.
+The `tools:` list names the four tools with the plugin's own prefix,
+`mcp__plugin_kola_kola__…`, because that is the name Claude Code gives
+them when Kola's server comes from this plugin. The list keeps the agent
+read-only: with no `tools:` line an agent inherits the whole session.
 
-Dropping the list instead would also have fixed it, and cost more than it
-saved: with no `tools:` line an agent inherits the whole session, and this one
-is read-only by design. Four tools, both spellings, is the version that keeps
-that true.
+With the local fallback from the README (`claude mcp add kola …`) the
+tools are named `mcp__kola__…` instead, and this agent cannot reach them.
+It then stays silent, which is its default anyway.
 
 Run both in parallel:
 

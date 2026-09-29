@@ -71,7 +71,9 @@ What changes with the fallback:
 | Kola.app location | anywhere | must be in `/Applications`, because the command names that path |
 | Tool names | `mcp__plugin_kola_kola__<name>` | `mcp__kola__<name>` |
 
-The skills and the `contact-suggester` agent work with both tool names.
+The skills work with both tool names. The `contact-suggester` agent
+works only with the plugin's server, because its tool list names the
+plugin's prefix; with the fallback it stays silent.
 In `/mcp`, disable the plugin's remote `kola` server while you use the
 fallback, so each tool does not appear twice.
 
