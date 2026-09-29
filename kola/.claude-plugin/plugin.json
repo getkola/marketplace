@@ -5,6 +5,7 @@
   "icon": "./assets/icon.svg",
   "license": "LicenseRef-Proprietary",
   "homepage": "https://getkola.app",
+  "privacyPolicyUrl": "https://getkola.app/privacy/",
   "repository": "https://github.com/getkola/marketplace",
   "keywords": [
     "kola",
